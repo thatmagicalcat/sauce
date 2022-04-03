@@ -1,3 +1,4 @@
+from ctypes import util
 from PyQt5 import QtCore, QtGui, QtWidgets
 import pyautogui
 import os
@@ -96,21 +97,19 @@ class Ui_MainWindow(object):
         self.pushButton_4.setText(_translate("MainWindow", "Remove Selected"))
 
     def remove_selected(self):
-        try:
-            items_in_list = self.listWidget.selectedItems()
-            utils.remove_abbrevation(self.local_list[items_in_list[0].text().split(" = ")[0]])
-            del self.local_list[items_in_list[0].text().split(" = ")[0]]
-            print(self.local_list)
-            utils.add_abbreviation(self.local_list.items())
+        # get the selected item
+        selected_item = self.listWidget.selectedItems()[0]
 
-            if not items_in_list:
-                pyautogui.alert("No item selected")
-                return
+        # remove the selected item from the local_list and abbrevation
+        for key, _ in self.local_list.items():
+            utils.remove_abbrevation(key)
+        self.local_list.pop(selected_item.text().split(" = ")[0])
 
-            for item in items_in_list:
-                self.listWidget.takeItem(self.listWidget.row(item))
-        except Exception as e:
-            pyautogui.alert(str(e))
+        # remove the selected item from the list
+        self.listWidget.takeItem(self.listWidget.row(selected_item))
+
+        # update the abbreviation
+        utils.add_abbreviation(self.local_list.items())
 
     def main(self):
         if len(self.lineEdit.text()) != 0 and len(self.lineEdit_2.text()):
@@ -139,7 +138,9 @@ class Ui_MainWindow(object):
             pyautogui.alert("Saved!")
 
     def load(self):
-        pyautogui.alert("If you're seeing duplication of snippets, please restart the application and again load the file")
+        for key, _ in self.local_list.items():
+            utils.remove_abbrevation(key)
+
         if not os.path.isfile(".data"):
             pyautogui.alert("data file not exists")
             return
